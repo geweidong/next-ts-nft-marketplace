@@ -1,15 +1,14 @@
 import Image from "next/image";
 import { ethers } from "ethers";
 import { truncateStr } from "@/utils";
-import { toast } from "react-toastify";
-import { useZustandStore } from "@/store";
 import { useState, useEffect, useCallback } from "react";
 import nftAbi from "../constants/BasicNft.json";
-import nftMarketplaceAbi from "../constants/NftMarketplace.json";
 import { useEvmRunContractFunction } from "@moralisweb3/next";
-import { Card, CardHeader, CardBody, CardFooter } from "@nextui-org/card";
+import { Card, CardHeader, CardBody } from "@nextui-org/card";
 import { UpdateListingModal } from "./UpdateListingModal";
 import { useDisclosure } from "@nextui-org/modal";
+import { useAccount } from "wagmi";
+import { BuyNft } from './BuyNft';
 
 export default function NFTBox({
     price,
@@ -17,19 +16,19 @@ export default function NFTBox({
     tokenId,
     marketplaceAddress,
     seller,
+    fetchNfts,
 }: {
     price: ethers.BigNumberish
     nftAddress: string
     tokenId: string
-    marketplaceAddress: string
+    marketplaceAddress: `0x${string}`
     seller?: string
+    fetchNfts: () => void
 }) {
-    const {isOpen, onOpen, onOpenChange} = useDisclosure();
-    const [showModal, setShowModal] = useState(false)
-    const { walletAddress, isWeb3Enabled } = useZustandStore((state) => ({
-        walletAddress: state.walletAddress,
-        isWeb3Enabled: state.isWeb3Enabled,
-    }));
+    const { isConnected, address: walletAddress } = useAccount();
+    const { isOpen: isUpdataOpen, onOpen: onOpenUpdate, onOpenChange: onOpenChangeUpdate} = useDisclosure();
+    const { isOpen: isBuyOpen, onOpen: onOpenBuy, onOpenChange: onOpenChangeBuy } = useDisclosure();
+
     const [imageURI, setImageURI] = useState("")
     const [tokenName, setTokenName] = useState("")
     const [tokenDescription, setTokenDescription] = useState("")
@@ -48,58 +47,50 @@ export default function NFTBox({
         })
 
         if (tokenURI) {
-            const requestURL = tokenURI.replace("ipfs://", "https://ipfs.io/ipfs/")
-            const fetchRes = await fetch(requestURL);
+            const fetchRes = await fetch(tokenURI);
             const tokenURIResponse = await (fetchRes).json()
             const imageURI = tokenURIResponse.image
-            const imageURIURL = imageURI.replace("ipfs://", "https://ipfs.io/ipfs/")
-            setImageURI(imageURIURL)
+            setImageURI(imageURI)
             setTokenName(tokenURIResponse.name)
             setTokenDescription(tokenURIResponse.description)
         }
     }, [fetchContractFunction, nftAddress, tokenId])
 
     useEffect(() => {
-        if (isWeb3Enabled) {
+        if (isConnected) {
             updateUI()
         }
-    }, [isWeb3Enabled, updateUI])
+    }, [isConnected, updateUI])
 
-    const isOwnedByUser = seller?.toLowerCase() === walletAddress.toLowerCase() || seller === undefined
+    const isOwnedByUser = seller?.toLowerCase() === walletAddress?.toLowerCase() || seller === undefined
     const formattedSellerAddress = isOwnedByUser ? "you" : truncateStr(seller || "", 15)
     
-    const buyItem = useCallback(() => {
-        return fetchContractFunction({
-            abi: nftMarketplaceAbi,
-            address: marketplaceAddress,
-            functionName: "buyItem",
-            params: {
-                buyItem: price,
-                nftAddress: nftAddress,
-                tokenId: tokenId,
-            },
-        })
-    }, [fetchContractFunction, marketplaceAddress, nftAddress, price, tokenId])
+    
 
     const handleCardClick = useCallback(() => {
         isOwnedByUser
-            ? onOpen()
-            : buyItem()
-    }, [buyItem, isOwnedByUser, onOpen])
-
-    // const handleBuyItemSuccess = async (tx) => {
-    //     await tx.wait(1)
-    //     toast.success("Item bought!")
-    // }
+            ? onOpenUpdate()
+            : onOpenBuy()
+    }, [isOwnedByUser, onOpenBuy, onOpenUpdate])
 
     return (
         <div>
             <UpdateListingModal
-                isOpen={isOpen}
-                onOpenChange={onOpenChange}
+                isOpen={isUpdataOpen}
+                onOpenChange={onOpenChangeUpdate}
                 tokenId={tokenId}
                 marketplaceAddress={marketplaceAddress}
                 nftAddress={nftAddress}
+                fetchNfts={fetchNfts}
+            />
+            <BuyNft
+                price={price}
+                fetchNfts={fetchNfts}
+                nftAddress={nftAddress}
+                marketplaceAddress={marketplaceAddress}
+                tokenId={tokenId}
+                isOpen={isBuyOpen}
+                onOpenChange={onOpenChangeBuy}
             />
             <div>
                 {imageURI ? (

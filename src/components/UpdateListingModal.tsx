@@ -1,18 +1,16 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState, useRef } from "react"
 import { ethers } from "ethers"
-import Image from "next/image"
 import { Input } from "@nextui-org/input";
 import { Button } from "@nextui-org/button";
 import { Modal, ModalBody, ModalHeader, ModalContent, ModalFooter } from "@nextui-org/modal";
+import nftMarketplaceAbi from "@/constants/NftMarketplace.json"
+import {
+    type BaseError,
+    useWaitForTransactionReceipt,
+    useWriteContract,
+} from 'wagmi';
 import { toast } from "react-toastify";
-
-export interface UpdateListingModalProps {
-    isOpen?: boolean
-    onOpenChange: (isOpen: boolean) => void;
-    tokenId: string
-    marketplaceAddress: string
-    nftAddress: string
-}
+import { sepolia } from "viem/chains";
 
 export const UpdateListingModal = ({
     isOpen,
@@ -20,25 +18,47 @@ export const UpdateListingModal = ({
     marketplaceAddress,
     nftAddress,
     onOpenChange,
-}: UpdateListingModalProps) => {
+    fetchNfts,
+}: Omit<INftCommonFunctionProps, 'price'>) => {
+    const toastId = useRef<any>(null);
     const [priceToUpdateListingWith, setPriceToUpdateListingWith] = useState("0")
 
-    const handleUpdateListingSuccess = async (tx: any) => {
-        await tx.wait(1)
-        toast.success("listing updated")
-        setPriceToUpdateListingWith("0")
-    }
+    const { error: transactionError, data: hash, writeContract } = useWriteContract()
 
-    // const { runContractFunction: updateListing } = useWeb3Contract({
-    //     abi: nftMarketplaceAbi,
-    //     contractAddress: marketplaceAddress,
-    //     functionName: "updateListing",
-    //     params: {
-    //         nftAddress: nftAddress,
-    //         tokenId: tokenId,
-    //         newPrice: ethers.utils.parseEther(priceToUpdateListingWith || "0"),
-    //     },
-    // })
+    const notify = () => toastId.current = toast(`Please waiting the trasaction...\n Trasaction hash: ${hash}`, { autoClose: false });
+
+    const updateToastSuccess = () => toast.update(toastId.current, { render: 'DONE', type: 'success', autoClose: 1000 });
+
+    const updateListing = useCallback(async (cb: () => void) => {
+        writeContract({
+            chainId: sepolia.id,
+            address: marketplaceAddress,
+            abi: nftMarketplaceAbi,
+            functionName: 'updateListing',
+            args: [nftAddress, tokenId, ethers.parseEther(priceToUpdateListingWith)]
+        })
+        cb();
+    }, [marketplaceAddress, nftAddress, priceToUpdateListingWith, tokenId, writeContract])
+
+    const { isLoading: isConfirming, isSuccess: isConfirmed } =
+        useWaitForTransactionReceipt({
+            hash,
+        })
+
+    useEffect(() => {
+        if (isConfirming) {
+            notify();
+        }
+        if (isConfirmed) {
+            updateToastSuccess();
+
+            setPriceToUpdateListingWith("0")
+            fetchNfts();
+        }
+        if (transactionError) {
+            toast.error((transactionError as BaseError).shortMessage || transactionError.message)
+        }
+    }, [isConfirmed, fetchNfts, isConfirming, transactionError])
 
     return (
         <Modal
@@ -64,15 +84,7 @@ export const UpdateListingModal = ({
                             <Button color="default" variant="light" onPress={onClose}>
                                 Leave it
                             </Button>
-                            <Button color="primary" onPress={() => {
-                                onClose()
-                                // updateListing({
-                                //     onError: (error) => {
-                                //         console.log(error)
-                                //     },
-                                //     onSuccess: handleUpdateListingSuccess,
-                                // })
-                            }}>
+                            <Button color="primary" onPress={() => updateListing(onClose)}>
                                 OK
                             </Button>
                         </ModalFooter>

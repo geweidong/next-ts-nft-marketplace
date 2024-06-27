@@ -1,46 +1,95 @@
 import { truncateStr } from "@/utils";
-import { useZustandStore } from "@/store"
-import { useCallback, useEffect, useState } from "react";
-import detectEthereumProvider from "@metamask/detect-provider";
+import { useAccount, useDisconnect, useEnsName, Connector, useChainId, useConnect } from 'wagmi';
+import { useEffect, useState } from "react";
 
-export default function ConnectButton() {
-  const [account, setAccount] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-  const setWalletAddress = useZustandStore(state => state.setWalletAddress);
-  const setWeb3Enabled = useZustandStore(state => state.setWeb3Enabled);
+const Account = () => {
+  const { address, connector } = useAccount();
+  const { disconnect } = useDisconnect();
+  const { data: ensName } = useEnsName({ address });
 
-  const connectWallet = useCallback(async () => {
-    const provider = await detectEthereumProvider();
+  const formattedAddress = truncateStr(address!, 10);
 
-    if (provider && provider === window.ethereum) {
-      try {
-        // @ts-ignore
-        const accounts = await provider.request({
-          method: "eth_requestAccounts"
-        })
-        setAccount(truncateStr(accounts[0], 10));
-        // set zustand store
-        setWalletAddress(accounts[0]);
-        setWeb3Enabled(true);
-        setErrorMessage('');
-      } catch (error: any) {
-        setWeb3Enabled(false);
-        setErrorMessage(error.message);
-      }
-    } else {
-      setErrorMessage('MetaMask not detected. Please install MetaMask and try again.');
-    }
-  }, [setWalletAddress, setWeb3Enabled]);
+  return (
+    <div className="row">
+      <div className="inline">
+        <div className="stack">
+          {address && (
+            <div className="text">
+              {ensName ? `${ensName} (${formattedAddress})` : formattedAddress}
+            </div>
+          )}
+          <div className="subtext">
+            Connected to {connector?.name} Connector
+          </div>
+        </div>
+      </div>
+      <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => disconnect()} type="button">
+        Disconnect
+      </button>
+    </div>
+  );
+}
+
+const ConnectorButton = ({
+  connector,
+  onClick,
+}: {
+  connector: Connector;
+  onClick: () => void;
+}) => {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    (async () => {
+      const provider = await connector.getProvider();
+      setReady(!!provider);
+    })();
+  }, [connector, setReady]);
+
+  return (
+    <button
+      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+      disabled={!ready}
+      onClick={onClick}
+      type="button"
+    >
+      {connector.name}
+    </button>
+  );
+}
+
+const Connect = () => {
+  const chainId = useChainId();
+  const { connectors, connect } = useConnect();
+  const [dataList, setDataList] = useState<readonly Connector[]>([]);
 
   useEffect(() => {
-    connectWallet();
-  }, [connectWallet]);
+    setDataList(connectors);
+  }, [connectors])
 
   return (
     <div>
-      <button onClick={connectWallet} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-        {account ? `Connected: ${account}` : 'Connect MetaMask'}
-      </button>
+      {dataList.map((connector) => (
+        <ConnectorButton
+          key={connector.uid}
+          connector={connector}
+          onClick={() => connect({ connector, chainId })}
+        />
+      ))}
+    </div>
+  );
+}
+
+export default function ConnectButton() {
+  const { isConnected } = useAccount();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(isConnected);
+  }, [isConnected]);
+
+  return (
+    <div>
+      {isMounted ? <Account /> : <Connect />}
     </div>
   )
 }

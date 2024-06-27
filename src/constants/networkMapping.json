@@ -1,7 +1,10 @@
 {
   "11155111": {
     "NftMarketplace": [
-      "0xF6B64e86dD5705eC0952B6843ad3809A528BF9C5"
+      "0xc236519289ad7d62780503d521CDb69931Ac2479"
+    ],
+    "BasicNft": [
+      "0x7F4f3D34EE208985c9A53f2872C1Ee13aA2AF0EC"
     ]
   }
 }

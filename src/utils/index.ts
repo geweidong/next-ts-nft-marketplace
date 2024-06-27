@@ -1,4 +1,5 @@
 export const truncateStr = (fullStr: string, strLen: number): string => {
+  if (!fullStr) return '';
   if (fullStr.length <= strLen) return fullStr
 
   const separator = "..."

@@ -2,16 +2,17 @@ import { useCallback, useEffect, useState } from "react";
 import { useEvmRunContractFunction } from "@moralisweb3/next";
 import networkMapping from "@/constants/networkMapping.json";
 import nftMarketplaceAbi from "@/constants/NftMarketplace.json"
+import { sepolia } from 'wagmi/chains';
 import NFTBox from "./NFTBox";
 
-const nftAddress = '0xE00588241f2696C101a3834B721BD0b9e40A7d00';
-const netWorkChainId = '11155111';
+const netWorkChainId = sepolia.id;
 
 export default function NftList() {
   const { fetch, isFetching } = useEvmRunContractFunction();
   const [listedNfts, setNftList] = useState<INftItem[]>([]);
 
   const nftMarketPlaceAddress = networkMapping[netWorkChainId].NftMarketplace[0]
+  const basicNftAddress = networkMapping[netWorkChainId].BasicNft[0]
 
   const fetchNfts = useCallback(async () => {
 
@@ -21,18 +22,20 @@ export default function NftList() {
       abi: nftMarketplaceAbi,
       functionName: 'getListing',
       params: {
-        nftAddress,
+        nftAddress: basicNftAddress,
         tokenId: '0',
       },
     });
     const [price, seller] = response as unknown as any[]
-    setNftList([{
-      price,
-      nftAddress,
-      tokenId: '0',
-      seller,
-    }])
-  }, [fetch, nftMarketPlaceAddress])
+    if (price > 0) {
+      setNftList([{
+        price,
+        nftAddress: basicNftAddress,
+        tokenId: '0',
+        seller,
+      }])
+    }
+  }, [basicNftAddress, fetch, nftMarketPlaceAddress])
 
   useEffect(() => {
     fetchNfts()
@@ -41,18 +44,27 @@ export default function NftList() {
   return isFetching ? (
     <div>Loading...</div>
   ) : (
-    listedNfts.map((nft: INftItem) => {
-      const { price, nftAddress, tokenId, seller } = nft;
-      return (
-        <NFTBox
-          marketplaceAddress={nftMarketPlaceAddress}
-          price={price}
-          nftAddress={nftAddress}
-          tokenId={tokenId}
-          seller={seller}
-          key={`${nftAddress}${tokenId}`}
-        />
-      )
-    })
+    <>
+      <div className="p-3 flex flex-col justify-center">
+        <span>NFT address: {basicNftAddress}</span>
+        <span>MarketPlace address: {nftMarketPlaceAddress}</span>
+      </div>
+      {
+        listedNfts.map((nft: INftItem) => {
+          const { price, nftAddress, tokenId, seller } = nft;
+          return (
+            <NFTBox
+              marketplaceAddress={nftMarketPlaceAddress as `0x${string}`}
+              price={price}
+              nftAddress={nftAddress}
+              tokenId={tokenId}
+              seller={seller}
+              key={`${nftAddress}${tokenId}`}
+              fetchNfts={fetchNfts}
+            />
+          )
+        })
+      }
+    </>
   )
 }
