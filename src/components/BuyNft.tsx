@@ -23,7 +23,7 @@ export const BuyNft = ({
 
     const { error: transactionError, data: hash, writeContract } = useWriteContract()
 
-    const notify = () => toastId.current = toast(`Please waiting the trasaction...\n Trasaction hash: ${hash}`, { autoClose: false });
+    const notify = useCallback(() => toastId.current = toast(`Please waiting the trasaction...\n Trasaction hash: ${hash}`, { autoClose: false }), [hash]);
 
     const updateToastSuccess = () => toast.update(toastId.current, { render: 'DONE', type: 'success', autoClose: 1000 });
 
@@ -55,7 +55,7 @@ export const BuyNft = ({
           console.log(transactionError)
           toast.error((transactionError as BaseError).shortMessage || transactionError.message)
         }
-    }, [isConfirmed, fetchNfts, isConfirming, transactionError])
+    }, [isConfirmed, fetchNfts, isConfirming, transactionError, notify])
 
     return (
         <Modal
