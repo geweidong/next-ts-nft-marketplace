@@ -1,18 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { useEvmRunContractFunction } from "@moralisweb3/next";
-import networkMapping from "@/constants/networkMapping.json";
 import nftMarketplaceAbi from "@/constants/NftMarketplace.json"
-import { sepolia } from 'wagmi/chains';
 import NFTBox from "./NFTBox";
 
-const netWorkChainId = sepolia.id;
-
-export default function NftList() {
+export default function NftList({
+  nftMarketPlaceAddress,
+  nftAddress,
+}: {
+  nftMarketPlaceAddress: `0x${string}`
+  nftAddress: `0x${string}`
+}) {
   const { fetch, isFetching } = useEvmRunContractFunction();
   const [listedNfts, setNftList] = useState<INftItem[]>([]);
-
-  const nftMarketPlaceAddress = networkMapping[netWorkChainId].NftMarketplace[0]
-  const basicNftAddress = networkMapping[netWorkChainId].BasicNft[0]
 
   const fetchNfts = useCallback(async () => {
 
@@ -22,7 +21,7 @@ export default function NftList() {
       abi: nftMarketplaceAbi,
       functionName: 'getListing',
       params: {
-        nftAddress: basicNftAddress,
+        nftAddress: nftAddress,
         tokenId: '0',
       },
     });
@@ -30,12 +29,12 @@ export default function NftList() {
     if (price > 0) {
       setNftList([{
         price,
-        nftAddress: basicNftAddress,
+        nftAddress: nftAddress,
         tokenId: '0',
         seller,
       }])
     }
-  }, [basicNftAddress, fetch, nftMarketPlaceAddress])
+  }, [nftAddress, fetch, nftMarketPlaceAddress])
 
   useEffect(() => {
     fetchNfts()
@@ -46,7 +45,7 @@ export default function NftList() {
   ) : (
     <>
       <div className="p-3 flex flex-col justify-center">
-        <span>NFT address: {basicNftAddress}</span>
+        <span>NFT address: {nftAddress}</span>
         <span>MarketPlace address: {nftMarketPlaceAddress}</span>
       </div>
       {
@@ -54,7 +53,7 @@ export default function NftList() {
           const { price, nftAddress, tokenId, seller } = nft;
           return (
             <NFTBox
-              marketplaceAddress={nftMarketPlaceAddress as `0x${string}`}
+              marketplaceAddress={nftMarketPlaceAddress}
               price={price}
               nftAddress={nftAddress}
               tokenId={tokenId}

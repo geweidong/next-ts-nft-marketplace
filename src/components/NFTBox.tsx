@@ -102,7 +102,7 @@ export default function NFTBox({
                             </CardHeader>
                             <CardBody className="overflow-visible py-2">
                                 <div className="p-2">
-                                    <div className="flex flex-col items-end gap-2">
+                                    <div className="flex flex-col gap-2 items-center">
                                         <div>#{tokenId}</div>
                                         <div className="italic text-sm">
                                             Owned by {formattedSellerAddress}

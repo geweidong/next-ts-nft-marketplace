@@ -1,5 +1,5 @@
 import Header from "@/components/Header"
-import NftList from "@/components/NftList";
+import Web3Container from "@/components/Web3Container";
 import { Inter } from "next/font/google";
 import { useAccount } from 'wagmi';
 import { useIsMounted } from '@/hooks';
@@ -19,7 +19,7 @@ export default function Home() {
           <>
             <Header />
             {
-              isConnected ? <NftList /> : <div>Not Connected</div>
+              isConnected ? <Web3Container /> : <div>Not Connected</div>
             }
           </>
         )
