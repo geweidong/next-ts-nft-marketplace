@@ -30,7 +30,6 @@ export default function Web3Container() {
       },
     })
 
-    console.log(proceeds, 'proceeds---proceeds', )
   }, [fetch, walletAddress])
 
   useEffect(() => {
@@ -62,8 +61,6 @@ export default function Web3Container() {
           <CardBody>
             <p>My current balance：</p>
             <p>{balance} ETH</p>
-
-            {/* <Button onClick={withdraw}>withdraw</Button> */}
           </CardBody>
         </Card>
       </div>

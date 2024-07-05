@@ -1,13 +1,24 @@
 import { http, createConfig } from 'wagmi';
 import { sepolia } from 'wagmi/chains';
+import { getDefaultConfig } from "connectkit";
+import { injected, metaMask, safe } from 'wagmi/connectors'
 
-// const projectId = '6e88be130a6faf39624ef90ed5794405';
-
-export const config = createConfig({
-  chains: [sepolia],
-  connectors: [],
-  transports: {
-    [sepolia.id]: http(),
-  },
-  ssr: true,
-});
+export const config = createConfig(
+  getDefaultConfig({
+    chains: [sepolia],
+    connectors: [
+      injected(),
+      metaMask(),
+      safe(),
+    ],
+    transports: {
+      [sepolia.id]: http("https://eth-sepolia.g.alchemy.com/v2/US9xf82FaAce6WVC1g3JIe91VCyepErb"),
+    },
+    appName: "Your App Name",
+    appDescription: "Your App Description",
+    appUrl: "https://family.co",
+    appIcon: "https://family.co/logo.png",
+    walletConnectProjectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,
+    ssr: true,
+  })
+);

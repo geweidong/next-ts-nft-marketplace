@@ -5,10 +5,19 @@ import type { AppProps } from "next/app";
 import {NextUIProvider} from "@nextui-org/react";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
+import { hashFn } from "@wagmi/core/query";
 import { config } from '../config/wagmi';
+import { ConnectKitProvider } from 'connectkit';
 import 'react-toastify/dist/ReactToastify.css';
 import "@/styles/globals.css";
-const queryClient = new QueryClient();
+export const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+          queryKeyHashFn: hashFn,
+        },
+      },
+});
+
 function MyApp({ Component, pageProps }: AppProps) {
     return (
         <div>
@@ -21,7 +30,9 @@ function MyApp({ Component, pageProps }: AppProps) {
             <NextUIProvider>
                 <WagmiProvider config={config}>
                     <QueryClientProvider client={queryClient}>
-                        <Component {...pageProps} />
+                        <ConnectKitProvider>
+                            <Component {...pageProps} />
+                        </ConnectKitProvider>
                     </QueryClientProvider>
                 </WagmiProvider>
             </NextUIProvider>
