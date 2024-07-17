@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import NftList from "@/components/NftList";
-import { Button } from "@nextui-org/button";
 import {Card, CardHeader, CardBody, CardFooter} from "@nextui-org/card";
 import nftMarketplaceAbi from "@/constants/NftMarketplace.json"
 import networkMapping from "@/constants/networkMapping.json";
@@ -29,7 +28,6 @@ export default function Web3Container() {
         seller: walletAddress,
       },
     })
-
   }, [fetch, walletAddress])
 
   useEffect(() => {

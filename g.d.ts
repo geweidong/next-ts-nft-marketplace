@@ -3,7 +3,7 @@ interface Window {
   ethers?: any;
 }
 interface INftItem {
-  price: string
+  price: ethers.BigNumberish
   nftAddress: string
   tokenId: string
   seller: string

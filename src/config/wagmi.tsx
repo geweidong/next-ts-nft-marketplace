@@ -16,8 +16,8 @@ export const config = createConfig(
     },
     appName: "Your App Name",
     appDescription: "Your App Description",
-    appUrl: "https://family.co",
-    appIcon: "https://family.co/logo.png",
+    appUrl: "https://xxx.co",
+    appIcon: "https://xxx.co/logo.png",
     walletConnectProjectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,
     ssr: true,
   })

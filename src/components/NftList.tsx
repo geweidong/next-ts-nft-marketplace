@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useEvmRunContractFunction } from "@moralisweb3/next";
 import nftMarketplaceAbi from "@/constants/NftMarketplace.json"
+import { useSupabaseHooksEventListeners } from "@/hooks";
+import { createClient } from "@/supabase/client";
 import NFTBox from "./NFTBox";
 
 export default function NftList({
@@ -10,35 +12,32 @@ export default function NftList({
   nftMarketPlaceAddress: `0x${string}`
   nftAddress: `0x${string}`
 }) {
-  const { fetch, isFetching } = useEvmRunContractFunction();
+  const [isFetching, setIsFetching] = useState(true);
+  const supabase = createClient();
   const [listedNfts, setNftList] = useState<INftItem[]>([]);
 
   const fetchNfts = useCallback(async () => {
-
-    const response = await fetch({
-      address: nftMarketPlaceAddress,
-      chain: "0xaa36a7",
-      abi: nftMarketplaceAbi,
-      functionName: 'getListing',
-      params: {
-        nftAddress: nftAddress,
-        tokenId: '0',
-      },
-    });
-    const [price, seller] = response as unknown as any[]
-    if (price > 0) {
-      setNftList([{
-        price,
-        nftAddress: nftAddress,
-        tokenId: '0',
-        seller,
-      }])
-    }
-  }, [nftAddress, fetch, nftMarketPlaceAddress])
+    const { data, error } = await supabase.from('nft-marketplace').select('*')
+    const nftList = data?.map((item: any) => {
+      return {
+        price: BigInt(item.price),
+        nftAddress: item.nftAddress,
+        tokenId: item.tokenId,
+        seller: item.seller,
+      }
+    })
+    setIsFetching(false)
+    setNftList(nftList!)
+  }, [supabase])
 
   useEffect(() => {
     fetchNfts()
   }, [fetchNfts])
+
+  useSupabaseHooksEventListeners({
+    nftMarketPlaceAddress,
+    fetchNfts,
+  })
 
   return isFetching ? (
     <div>Loading...</div>

@@ -93,8 +93,8 @@ export default function NFTBox({
                 onOpenChange={onOpenChangeBuy}
             />
             <div>
-                {imageURI ? (
-                    <div onClick={handleCardClick} className="cursor-pointer">
+                {imageURI && (
+                    <div onClick={handleCardClick} className="cursor-pointer mb-2">
                         <Card className="py-4">
                             <CardHeader className="pb-0 pt-2 px-4 flex-col items-start">
                                 <p className="text-tiny uppercase font-bold">{tokenName}</p>
@@ -123,8 +123,6 @@ export default function NFTBox({
                             </CardBody>
                         </Card>
                     </div>
-                ) : (
-                    <div>Loading...</div>
                 )}
             </div>
         </div>
