@@ -8,11 +8,16 @@ export const config = createConfig(
     chains: [sepolia],
     connectors: [
       injected(),
-      metaMask(),
+      metaMask({
+        dappMetadata: {
+          name: "Your App Name",
+          url: "https://xxx.co",
+        }
+      }),
       safe(),
     ],
     transports: {
-      [sepolia.id]: http("https://eth-sepolia.g.alchemy.com/v2/US9xf82FaAce6WVC1g3JIe91VCyepErb"),
+      [sepolia.id]: http(process.env.SEPOLIA_RPC_URL),
     },
     appName: "Your App Name",
     appDescription: "Your App Description",

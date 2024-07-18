@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import Head from "next/head"
 import { ToastContainer } from 'react-toastify'
 import type { AppProps } from "next/app";
@@ -10,6 +9,7 @@ import { config } from '../config/wagmi';
 import { ConnectKitProvider } from 'connectkit';
 import 'react-toastify/dist/ReactToastify.css';
 import "@/styles/globals.css";
+
 export const queryClient = new QueryClient({
     defaultOptions: {
         queries: {

@@ -1,7 +1,7 @@
 const { ethers } = require("ethers");
 
 const ALCHEMY_SEPOLIA_URL =
-  "https://eth-sepolia.g.alchemy.com/v2/US9xf82FaAce6WVC1g3JIe91VCyepErb";
+  "https://eth-sepolia.g.alchemy.com/v2/xxx";
 const wallet_address = "0xaAe8b076c5E84505420FA51799Bb4d6Eba241ecC";
 
 async function main() {
