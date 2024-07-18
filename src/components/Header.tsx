@@ -1,4 +1,3 @@
-import Link from "next/link"
 import { ConnectKitButton } from 'connectkit';
 
 export default function Header() {

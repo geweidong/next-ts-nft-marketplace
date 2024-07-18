@@ -36,7 +36,7 @@ export function useSupabaseHooksEventListeners({
         tokenId: tokenId.toString(),
       })
       if (error) {
-        console.log(error, 'supabase insert error!')
+        console.log(error, 'supabase ItemListed error!')
       } else {
         fetchNfts()
       }
@@ -55,7 +55,7 @@ export function useSupabaseHooksEventListeners({
         price: price.toString(),
       }).eq('nftAddress', nftAddress).eq('tokenId', tokenId.toString())
       if (error) {
-        console.log(error, 'supabase update error!')
+        console.log(error, 'supabase ItemUpdateListed error!')
       } else {
         fetchNfts()
       }
@@ -68,11 +68,30 @@ export function useSupabaseHooksEventListeners({
     eventName: 'ItemCanceled',
     async onLogs(logs: any) {
       console.log('事件ItemCanceled监听!', logs)
-      const { seller, price, nftAddress, tokenId } = logs[0].args
+      const { nftAddress, tokenId } = logs[0].args
       // 插入数据库
       const { data, error} = await supabase.from('nft-marketplace').delete().eq('nftAddress', nftAddress).eq('tokenId', tokenId.toString())
       if (error) {
-        console.log(error, 'supabase delete error!')
+        console.log(error, 'supabase ItemCanceled error!')
+      } else {
+        fetchNfts()
+      }
+    },
+  })
+
+  useWatchContractEvent({
+    address: nftMarketPlaceAddress,
+    abi: nftMarketplaceAbi,
+    eventName: 'ItemBought',
+    async onLogs(logs: any) {
+      console.log('事件ItemBought监听!', logs)
+      const { buyer, price, nftAddress, tokenId } = logs[0].args
+      // 插入数据库
+      const { data, error} = await supabase.from('nft-marketplace').update({
+        seller: buyer,
+      }).eq('nftAddress', nftAddress).eq('tokenId', tokenId.toString())
+      if (error) {
+        console.log(error, 'supabase ItemBought error!')
       } else {
         fetchNfts()
       }

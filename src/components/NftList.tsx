@@ -1,6 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { useEvmRunContractFunction } from "@moralisweb3/next";
-import nftMarketplaceAbi from "@/constants/NftMarketplace.json"
 import { useSupabaseHooksEventListeners } from "@/hooks";
 import { createClient } from "@/supabase/client";
 import NFTBox from "./NFTBox";
@@ -17,7 +15,7 @@ export default function NftList({
   const [listedNfts, setNftList] = useState<INftItem[]>([]);
 
   const fetchNfts = useCallback(async () => {
-    const { data, error } = await supabase.from('nft-marketplace').select('*')
+    const { data } = await supabase.from('nft-marketplace').select('*')
     const nftList = data?.map((item: any) => {
       return {
         price: BigInt(item.price),

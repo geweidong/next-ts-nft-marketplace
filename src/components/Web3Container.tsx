@@ -1,52 +1,55 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import NftList from "@/components/NftList";
 import {Card, CardHeader, CardBody, CardFooter} from "@nextui-org/card";
+import { type BaseError, useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import nftMarketplaceAbi from "@/constants/NftMarketplace.json"
 import networkMapping from "@/constants/networkMapping.json";
-import { useEvmRunContractFunction } from "@moralisweb3/next";
+import { Button } from "@nextui-org/button";
 import { sepolia } from 'wagmi/chains';
-import { useAccount } from "wagmi";
+import { toast } from "react-toastify";
 import { ethers } from "ethers";
 
 const netWorkChainId = sepolia.id;
 
-const nftMarketPlaceAddress = networkMapping[netWorkChainId].NftMarketplace[0]
+const nftMarketPlaceAddress = networkMapping[netWorkChainId].NftMarketplace[0] as `0x${string}`
 const basicNftAddress = networkMapping[netWorkChainId].BasicNft[0]
 
 export default function Web3Container() {
+  const toastId = useRef<any>(null);
+  const { error: withdrawProceedsError, data: withdrawProceedsHash, writeContract } = useWriteContract()
   const { address: walletAddress } = useAccount();
-  const [balance, setBalance] = useState('0')
+  const balanceData = useReadContract({
+    abi: nftMarketplaceAbi,
+    address: nftMarketPlaceAddress,
+    functionName: 'getProceeds',
+    args: [walletAddress],
+  })
 
-  const { fetch } = useEvmRunContractFunction();
   const withdraw = useCallback(async () => {
-    const proceeds = await fetch({
-      abi: nftMarketplaceAbi,
+    writeContract({
+      chainId: sepolia.id,
       address: nftMarketPlaceAddress,
-      chain: "0xaa36a7",
-      functionName: "getProceeds",
-      params: {
-        seller: walletAddress,
-      },
+      abi: nftMarketplaceAbi,
+      functionName: 'withdrawProceeds',
     })
-  }, [fetch, walletAddress])
+  }, [writeContract])
+  const notify = useCallback(() => toastId.current = toast(`Please waiting the trasaction...\n Trasaction hash: ${withdrawProceedsHash}`, { autoClose: false }), [withdrawProceedsHash]);
+  const updateToastSuccess = () => toast.update(toastId.current, { render: 'DONE', type: 'success', autoClose: 1000 });
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: withdrawProceedsHash })
 
   useEffect(() => {
-    const getBalance = async () => {
-      const balance = await fetch({
-        abi: nftMarketplaceAbi,
-        address: nftMarketPlaceAddress,
-        chain: "0xaa36a7",
-        functionName: "getProceeds",
-        params: {
-          seller: walletAddress,
-        },
-      })
-
-      setBalance(ethers.formatUnits(balance!, "ether"))
+    if (isConfirming) {
+        notify();
     }
-
-    getBalance()
-  }, [fetch, walletAddress])
+    if (isConfirmed) {
+        updateToastSuccess();
+        balanceData.refetch();
+    }
+    if (withdrawProceedsError) {
+      console.log(withdrawProceedsError)
+      toast.error((withdrawProceedsError as BaseError).shortMessage || withdrawProceedsError.message)
+    }
+}, [balanceData, isConfirmed, isConfirming, notify, withdrawProceedsError])
 
   return (
     <div>
@@ -54,14 +57,17 @@ export default function Web3Container() {
         nftMarketPlaceAddress={nftMarketPlaceAddress as `0x${string}`}
         nftAddress={basicNftAddress as `0x${string}`}
       />
-      <div className="flex mt-3">
+      {/* <div className="flex mt-3">
         <Card>
           <CardBody>
             <p>My current balance：</p>
-            <p>{balance} ETH</p>
+            <p>{ethers.formatUnits(balanceData.data as bigint || 0, "ether")} ETH</p>
+            <Button color="default" variant="light" onPress={withdraw}>
+              Withdraw
+            </Button>
           </CardBody>
         </Card>
-      </div>
+      </div> */}
     </div>
   )
 }

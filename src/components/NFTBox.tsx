@@ -70,8 +70,8 @@ export default function NFTBox({
     const handleCardClick = useCallback(() => {
         isOwnedByUser
             ? onOpenUpdate()
-            : onOpenBuy()
-    }, [isOwnedByUser, onOpenBuy, onOpenUpdate])
+            : alert("You can't update this item, you are not the owner")
+    }, [isOwnedByUser, onOpenUpdate])
 
     return (
         <div>
