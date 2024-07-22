@@ -4,7 +4,7 @@ interface Window {
 }
 interface INftItem {
   price: ethers.BigNumberish
-  nftAddress: string
+  nftAddress: `0x${string}`
   tokenId: string
   seller: string
 }
@@ -13,7 +13,7 @@ interface INftCommonFunctionProps {
   onOpenChange: (isOpen: boolean) => void;
   tokenId: string
   marketplaceAddress: `0x${string}`
-  nftAddress: string
+  nftAddress: `0x${string}`
   fetchNfts: () => void
   price: ethers.BigNumberish
 }
