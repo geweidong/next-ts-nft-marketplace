@@ -3,12 +3,12 @@ import { ethers } from "ethers";
 import { truncateStr } from "@/utils";
 import { useState, useEffect, useCallback } from "react";
 import nftAbi from "../constants/BasicNft.json";
-import { useEvmRunContractFunction } from "@moralisweb3/next";
 import { Card, CardHeader, CardBody } from "@nextui-org/card";
 import { UpdateListingModal } from "./UpdateListingModal";
 import { useDisclosure } from "@nextui-org/modal";
 import { useAccount } from "wagmi";
 import { BuyNft } from './BuyNft';
+import { useReadContract } from "wagmi";
 
 export default function NFTBox({
     price,
@@ -19,7 +19,7 @@ export default function NFTBox({
     fetchNfts,
 }: {
     price: ethers.BigNumberish
-    nftAddress: string
+    nftAddress: `0x${string}`
     tokenId: string
     marketplaceAddress: `0x${string}`
     seller?: string
@@ -33,28 +33,23 @@ export default function NFTBox({
     const [tokenName, setTokenName] = useState("")
     const [tokenDescription, setTokenDescription] = useState("")
 
-    const { fetch: fetchContractFunction } = useEvmRunContractFunction()
+    const { data: tokenURI } = useReadContract({
+        abi: nftAbi,
+        address: nftAddress,
+        functionName: 'tokenURI',
+        args: [tokenId],
+      })
 
     const updateUI = useCallback(async function () {
-        const tokenURI = await fetchContractFunction({
-            abi: nftAbi,
-            address: nftAddress,
-            chain: "0xaa36a7",
-            functionName: "tokenURI",
-            params: {
-                tokenId: tokenId,
-            },
-        })
-
         if (tokenURI) {
-            const fetchRes = await fetch(tokenURI);
+            const fetchRes = await fetch(tokenURI as URL);
             const tokenURIResponse = await (fetchRes).json()
             const imageURI = tokenURIResponse.image
             setImageURI(imageURI)
             setTokenName(tokenURIResponse.name)
             setTokenDescription(tokenURIResponse.description)
         }
-    }, [fetchContractFunction, nftAddress, tokenId])
+    }, [tokenURI])
 
     useEffect(() => {
         if (isConnected) {
