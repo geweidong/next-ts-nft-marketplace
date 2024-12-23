@@ -1,8 +1,8 @@
 import Header from "@/components/Header"
 import Web3Container from "@/components/Web3Container";
 import { Inter } from "next/font/google";
-import { useAccount } from 'wagmi';
 import { useIsMounted } from '@/hooks';
+import { useAccount } from 'wagmi';
 
 const inter = Inter({ subsets: ["latin"] });
 
